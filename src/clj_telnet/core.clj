@@ -3,7 +3,8 @@
   (:import
     [org.apache.commons.net.telnet TelnetClient]
     [java.net InetSocketAddress Socket]
-    [java.io PrintStream PrintWriter]))
+    [java.io PrintStream PrintWriter])
+  (:require [clj-telnet.wait :refer [wait-for]]))
 
 (defn get-telnet
   "returns a telnetclient given server-ip as String and port as int"
@@ -34,6 +35,16 @@
             (str result s)
             (recur (str result s)))
           (recur (str result s)))))))
+
+(defn read-all
+  [^TelnetClient telnet]
+  "Attempts to read all the data from the telnet stream.
+   Should probably only be used in repl"
+  (let [in (.getInputStream telnet)]
+    (wait-for 10 1000 (fn [] (> (.available in) 0)))
+    (loop [result ""]
+      (if (or (> (.available in) 0) (wait-for 10 1000 (fn [] (> (.available in) 0))))
+        (recur (str result (char (.read in)))) result))))
 
 (defn write
   "writes to the output stream of a telnet client"
