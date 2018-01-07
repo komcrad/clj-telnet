@@ -1,14 +1,35 @@
 # clj-telnet
 
-A Clojure library designed to ... well, that part is up to you.
+A simple clojure telnet client
 
 ## Usage
+[![Clojars Project](https://img.shields.io/clojars/v/webdriver.svg)](https://clojars.org/clj-telnet)
 
-FIXME
+## Example
+### Assuming you're in a repl (`lein repl`)...
 
-## License
+Import the core namespace:
 
-Copyright © 2017 FIXME
+`(use 'clj-telnet.core)`
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Create a telnet object (Don't forget to close when finished)
+
+`(def telnet (get-telnet url port))`
+
+Now you can read and write from that object.
+
+Read buffer untill some-string:
+
+`(read-until telnet some-string)`
+
+Send command to telnet server:
+
+`(write telnet some-command)`
+
+Read everything from the buffer (don't use in production)
+
+`(read-all telnet)`
+
+Close the telnet connection
+
+`(kill telnet)`
