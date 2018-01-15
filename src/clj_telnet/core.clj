@@ -10,14 +10,15 @@
   "returns a telnetclient given server-ip as String and port as int"
   ([^String server-ip ^Integer port]
    ;test if server will connect on port
-    (. (new java.net.Socket) connect
-       (new java.net.InetSocketAddress server-ip port) 1000)
-    (let [tc (TelnetClient.)]
-      (.connect tc server-ip port)
-      (.setKeepAlive tc true)
-      tc))
+   (let [s (new java.net.Socket)]
+     (. s connect (new java.net.InetSocketAddress server-ip port) 1000)
+     (.close s))
+  (let [tc (TelnetClient.)]
+     (.connect tc server-ip port)
+     (.setKeepAlive tc true)
+     tc))
   ([^String server-ip]
-    (get-telnet server-ip 23)))
+   (get-telnet server-ip 23)))
 
 (defn kill-telnet
   "disconnects telnet-client"
@@ -53,3 +54,10 @@
     (doto out
       (.println s)
       (.flush))))
+
+(defn with-telnet
+  [telnet f]
+  (try (f telnet)
+    (catch Exception e
+      (kill-telnet telnet)
+      (throw e))))
