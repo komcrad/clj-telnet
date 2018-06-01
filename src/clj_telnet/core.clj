@@ -11,7 +11,7 @@
   ([^String server-ip ^Integer port]
    ;test if server will connect on port
    (let [s (new java.net.Socket)]
-     (. s connect (new java.net.InetSocketAddress server-ip port) 1000)
+     (. s connect (new java.net.InetSocketAddress server-ip port) 5000)
      (.close s))
   (let [tc (TelnetClient.)]
      (.connect tc server-ip port)
