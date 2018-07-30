@@ -34,4 +34,4 @@ Read everything from the buffer (don't use in production)
 
 Close the telnet connection
 
-`(kill telnet)`
+`(kill-telnet telnet)`
