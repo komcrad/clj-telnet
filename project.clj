@@ -1,4 +1,4 @@
-(defproject clj-telnet "0.1.4"
+(defproject clj-telnet "0.2.0-SNAPSHOT"
   :description "A clojure telnet client"
   :url "https://github.com/komcrad/clj-telnet"
   :license {:name "GPL-2.0"
