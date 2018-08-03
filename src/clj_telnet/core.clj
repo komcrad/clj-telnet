@@ -3,7 +3,8 @@
   (:import
     [org.apache.commons.net.telnet TelnetClient]
     [java.net InetSocketAddress Socket]
-    [java.io PrintStream PrintWriter])
+    [java.io PrintStream PrintWriter]
+    [clojure.lang PersistentVector])
   (:require [clj-telnet.wait :refer [wait-for]]))
 
 (defn get-telnet
@@ -25,17 +26,22 @@
   [^TelnetClient telnet-client]
   (.disconnect telnet-client))
 
-(defn read-until
+(defn read-until-or
   "reads the input stream of a telnet client till it finds pattern"
-  [^TelnetClient telnet ^String pattern]
+  [^TelnetClient telnet ^PersistentVector patterns]
   (let [in (.getInputStream telnet)]
     (loop [result ""]
       (let [s (char (.read in))]
-        (if (= s (last pattern))
-          (if (clojure.string/ends-with? (str result s) pattern)
+        (if (some #(= s (last %)) patterns)
+          (if (some #(clojure.string/ends-with? (str result s) %) patterns)
             (str result s)
             (recur (str result s)))
           (recur (str result s)))))))
+
+(defn read-until
+  "reads the input stream of a telnet client till it finds pattern"
+  [^TelnetClient telnet ^String pattern]
+  (read-until-or telnet [pattern]))
 
 (defn read-all
   [^TelnetClient telnet]
