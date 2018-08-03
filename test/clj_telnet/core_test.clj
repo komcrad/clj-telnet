@@ -11,10 +11,20 @@
     (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4" 23)))
     (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4")))))
 
+(deftest read-until-or-test
+  (testing "read-until-or-test"
+    (let [telnet (get-telnet "telehack.com" 23)]
+      (is (.contains (read-until-or telnet ["not a line" "zrun"])
+                     "May the command line live forever."))
+      (write telnet "echo hello world")
+      (is (.contains (read-until-or telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
+                     "echo hello world\r\nhello world\r\n."))
+      (kill-telnet telnet))))
+
 (deftest read-until-test
   (testing "read-util"
     (let [telnet (get-telnet "telehack.com" 23)]
-      (is (.contains (read-until telnet "zrun") 
+      (is (.contains (read-until telnet "zrun")
                      "May the command line live forever."))
       (kill-telnet telnet))
     (let [telnet (get-telnet "telehack.com" 23)]
