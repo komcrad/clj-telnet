@@ -19,6 +19,7 @@
       (write telnet "echo hello world")
       (is (.contains (read-until-or telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
                      "echo hello world\r\nhello world\r\n."))
+      (is (= "" (read-until-or telnet ["hello there"] 1000)))
       (kill-telnet telnet))))
 
 (deftest read-until-test
