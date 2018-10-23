@@ -27,16 +27,25 @@
   (.disconnect telnet-client))
 
 (defn read-until-or
-  "reads the input stream of a telnet client till it finds pattern"
-  [^TelnetClient telnet ^PersistentVector patterns]
-  (let [in (.getInputStream telnet)]
-    (loop [result ""]
-      (let [s (char (.read in))]
-        (if (some #(= s (last %)) patterns)
-          (if (some #(clojure.string/ends-with? (str result s) %) patterns)
-            (str result s)
-            (recur (str result s)))
-          (recur (str result s)))))))
+  "reads the input stream of a telnet client until it finds pattern or the timeout
+  (milliseconds) is reached returns read data as a string"
+  ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
+   (let [in (.getInputStream telnet)
+         start-time (System/currentTimeMillis)]
+     (loop [result ""]
+       (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
+         (if (< 0 (.available in))
+           (let [s (char (.read in))]
+             (if (some #(= s (last %)) patterns)
+               (if (some #(clojure.string/ends-with? (str result s) %) patterns)
+                 (str result s)
+                 (recur (str result s)))
+               (recur (str result s))))
+           (do (Thread/sleep 50)
+               (recur result)))
+         result))))
+  ([^TelnetClient telnet ^PersistentVector patterns]
+   (read-until-or telnet patterns 0)))
 
 (defn read-until
   "reads the input stream of a telnet client till it finds pattern"
