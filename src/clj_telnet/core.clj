@@ -53,9 +53,9 @@
   (read-until-or telnet [pattern]))
 
 (defn read-all
-  [^TelnetClient telnet]
   "Attempts to read all the data from the telnet stream.
    Should probably only be used in repl"
+  [^TelnetClient telnet]
   (let [in (.getInputStream telnet)]
     (wait-for 10 1000 (fn [] (> (.available in) 0)))
     (loop [result ""]
