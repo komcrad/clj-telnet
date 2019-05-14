@@ -20,15 +20,15 @@
       (is (= "" (read-until-or telnet ["hello there"] 1000)))
       (kill-telnet telnet))))
 
-(deftest read-until-or-re-test
-  (testing "read-until-or-re-test"
+(deftest read-until-or-test-1
+  (testing "read-until-or-test-1"
     (let [telnet (get-telnet "telehack.com" 23)]
-      (is (.contains (read-until-or-re telnet ["not a line" "zrun"])
+      (is (.contains (read-until-or telnet ["not a line" "zrun"])
                      "May the command line live forever."))
       (write telnet "echo hello world")
-      (is (.contains (read-until-or-re telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
+      (is (.contains (read-until-or telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
                      "echo hello world\r\nhello world\r\n."))
-      (is (= "" (read-until-or-re telnet ["hello there"] 2000)))
+      (is (= "" (read-until-or telnet ["hello there"] 2000)))
       (kill-telnet telnet))))
 
 (deftest read-until-test
