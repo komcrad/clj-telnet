@@ -25,19 +25,22 @@
 
 (defn read-until-or
   "reads the input stream of a telnet client until it finds pattern or the timeout
-  (milliseconds) is reached returns read data as a string"
+  (milliseconds) is reached returns read data as a string.
+  pattern is String of Regex."
   ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
    (let [in (.getInputStream telnet)
          start-time (System/currentTimeMillis)]
      (loop [result ""]
        (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
          (if (< 0 (.available in))
-           (let [s (char (.read in))]
-             (if (some #(= s (last %)) patterns)
-               (if (some #(clojure.string/ends-with? (str result s) %) patterns)
-                 (str result s)
-                 (recur (str result s)))
-               (recur (str result s))))
+           (let [s (char (.read in))
+                 buf (str result s)]
+             (if (some #(condp instance? %1
+                          java.lang.String (cs/ends-with? buf %1)
+                          java.util.regex.Pattern (re-find %1 buf)
+                          :default false) patterns)
+               buf
+               (recur buf)))
            (do (Thread/sleep 50)
                (recur result)))
          result))))
@@ -73,27 +76,4 @@
     (catch Exception e
       (kill-telnet telnet)
       (throw e))))
-
-(defn read-until-or-re
-  "reads the input stream of a telnet client until it finds pattern or the timeout
-  (milliseconds) is reached returns read data as a string"
-  ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
-   (let [in (.getInputStream telnet)
-         start-time (System/currentTimeMillis)]
-     (loop [result ""]
-       (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
-         (if (< 0 (.available in))
-           (let [s (char (.read in))
-                 buf (str result s)]
-             (if (some #(condp instance? %1
-                          java.lang.String (cs/ends-with? buf %1)
-                          java.util.regex.Pattern (re-find %1 buf)
-                          :default false) patterns)
-               buf
-               (recur buf)))
-           (do (Thread/sleep 50)
-               (recur result)))
-         result))))
-  ([^TelnetClient telnet ^PersistentVector patterns]
-   (read-until-or-re telnet patterns 0)))
 
