@@ -5,16 +5,13 @@
     [java.net InetSocketAddress Socket]
     [java.io PrintStream PrintWriter]
     [clojure.lang PersistentVector])
-  (:require [clj-telnet.wait :refer [wait-for]]))
+  (:require [clj-telnet.wait :refer [wait-for]]
+            [clojure.string :as cs]))
 
 (defn get-telnet
   "returns a telnetclient given server-ip as String and port as int"
   ([^String server-ip ^Integer port]
-   ;test if server will connect on port
-   (let [s (new java.net.Socket)]
-     (. s connect (new java.net.InetSocketAddress server-ip port) 5000)
-     (.close s))
-  (let [tc (TelnetClient.)]
+   (let [tc (TelnetClient.)]
      (.connect tc server-ip port)
      (.setKeepAlive tc true)
      tc))
@@ -76,3 +73,27 @@
     (catch Exception e
       (kill-telnet telnet)
       (throw e))))
+
+(defn read-until-or-re
+  "reads the input stream of a telnet client until it finds pattern or the timeout
+  (milliseconds) is reached returns read data as a string"
+  ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
+   (let [in (.getInputStream telnet)
+         start-time (System/currentTimeMillis)]
+     (loop [result ""]
+       (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
+         (if (< 0 (.available in))
+           (let [s (char (.read in))
+                 buf (str result s)]
+             (if (some #(condp instance? %1
+                          java.lang.String (cs/ends-with? buf %1)
+                          java.util.regex.Pattern (re-find %1 buf)
+                          :default false) patterns)
+               buf
+               (recur buf)))
+           (do (Thread/sleep 50)
+               (recur result)))
+         result))))
+  ([^TelnetClient telnet ^PersistentVector patterns]
+   (read-until-or-re telnet patterns 0)))
+
