@@ -7,9 +7,7 @@
     (is (= "class org.apache.commons.net.telnet.TelnetClient"
            (str (type (get-telnet "telehack.com")))))
     (is (= "class org.apache.commons.net.telnet.TelnetClient"
-           (str (type (get-telnet "telehack.com" 23)))))
-    (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4" 23)))
-    (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4")))))
+           (str (type (get-telnet "telehack.com" 23)))))))
 
 (deftest read-until-or-test
   (testing "read-until-or-test"
@@ -20,6 +18,17 @@
       (is (.contains (read-until-or telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
                      "echo hello world\r\nhello world\r\n."))
       (is (= "" (read-until-or telnet ["hello there"] 1000)))
+      (kill-telnet telnet))))
+
+(deftest read-until-or-re-test
+  (testing "read-until-or-re-test"
+    (let [telnet (get-telnet "telehack.com" 23)]
+      (is (.contains (read-until-or-re telnet ["not a line" "zrun"])
+                     "May the command line live forever."))
+      (write telnet "echo hello world")
+      (is (.contains (read-until-or-re telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
+                     "echo hello world\r\nhello world\r\n."))
+      (is (= "" (read-until-or-re telnet ["hello there"] 2000)))
       (kill-telnet telnet))))
 
 (deftest read-until-test
