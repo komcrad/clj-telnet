@@ -46,7 +46,7 @@
                           :default false) patterns)
                buf
                (recur buf)))
-           (do (Thread/sleep 50)
+           (do (Thread/sleep 10)
                (recur result)))
          result))))
   ([^TelnetClient telnet ^PersistentVector patterns]

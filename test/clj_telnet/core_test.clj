@@ -1,7 +1,6 @@
 (ns clj-telnet.core-test
   (:require [clojure.test :refer :all]
-            [clj-telnet.core :refer :all])
-  (:import java.net.SocketTimeoutException))
+            [clj-telnet.core :refer :all]))
 
 (deftest get-telnet-test
   (testing "get-telnet"
@@ -21,11 +20,8 @@
       (write telnet "echo hello world")
       (is (.contains (read-until-or telnet ["fake line" "not a line" "ld\r\nhello world\r\n."])
                      "echo hello world\r\nhello world\r\n."))
-      (is (= "" (read-until-or telnet ["hello there"] 1000)))
-      (kill-telnet telnet))))
-
-(deftest read-until-or-test-1
-  (testing "read-until-or-test-1"
+      (is (= "" (read-until-or telnet ["hello there"] 3000)))
+      (kill-telnet telnet))
     (let [telnet (get-telnet "telehack.com" 23)]
       (is (.contains (read-until-or telnet [#"not a line" #"md\d "])
                      "May the command line live forever."))
@@ -39,7 +35,11 @@
       (kill-telnet telnet))
     (let [telnet (get-telnet "telehack.com" 23)]
       (is (not (clojure.string/ends-with? (read-until telnet "May the command line live forever")
-                                     "May the command line live forever ")))
+                                          "May the command line live forever ")))
+      (kill-telnet telnet))
+    (let [telnet (get-telnet "telehack.com" 23)]
+      (is (.contains (read-until telnet "2048")
+                     "2048"))
       (kill-telnet telnet))))
 
 (deftest read-all-test
