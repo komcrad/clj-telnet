@@ -2,16 +2,21 @@
   (:gen-class)
   (:import
     [org.apache.commons.net.telnet TelnetClient]
-    [java.net InetSocketAddress Socket]
     [java.io PrintStream PrintWriter]
     [clojure.lang PersistentVector])
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
 (defn get-telnet
-  "returns a telnetclient given server-ip as String and port as int"
-  ([^String server-ip ^Integer port]
+  "returns a telnetclient given server-ip as String and port as int.
+  Support options:
+  :connet-timeout (default 5000)
+  :default-timeout (default 15000)"
+  ([^String server-ip ^Integer port & {:keys [connect-timeout default-timeout]
+                                       :or {connect-timeout 5000 default-timeout 15000}}]
    (let [tc (TelnetClient.)]
+     (.setConnectTimeout tc connect-timeout)
+     (.setDefaultTimeout tc default-timeout)
      (.connect tc server-ip port)
      (.setKeepAlive tc true)
      tc))
@@ -26,7 +31,7 @@
 (defn read-until-or
   "reads the input stream of a telnet client until it finds pattern or the timeout
   (milliseconds) is reached returns read data as a string.
-  pattern is String of Regex."
+  patterns is a vector of Strings of Regexs."
   ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
    (let [in (.getInputStream telnet)
          start-time (System/currentTimeMillis)]
@@ -54,7 +59,7 @@
 
 (defn read-all
   "Attempts to read all the data from the telnet stream.
-   Should probably only be used in repl"
+  Should probably only be used in repl"
   [^TelnetClient telnet]
   (let [in (.getInputStream telnet)]
     (wait-for 10 1000 (fn [] (> (.available in) 0)))
@@ -73,7 +78,6 @@
 (defn with-telnet
   [telnet f]
   (try (f telnet)
-    (catch Exception e
-      (kill-telnet telnet)
-      (throw e))))
-
+       (catch Exception e
+         (kill-telnet telnet)
+         (throw e))))
