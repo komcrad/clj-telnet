@@ -1,5 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
+
+## [0.4.0 2019-05-14]
+- Adds ability for read-until-or to accept reg-ex
+
 ## [0.3.0 2018-10-23]
 ### Added
 - timeout for reading the telnet client. If you don't find what you're looking for, and the timeout expires, whatever has been read will be returned"
