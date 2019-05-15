@@ -75,9 +75,12 @@
       (.println s)
       (.flush))))
 
-(defn with-telnet
-  [telnet f]
-  (try (f telnet)
-       (catch Exception e
-         (kill-telnet telnet)
-         (throw e))))
+(defmacro with-telnet
+  "
+  "
+  [bindings & body]
+  `(let ~(subvec bindings 0 2)
+     (try ~@body
+          (catch Exception e#
+            (kill-telnet ~(first bindings))
+            (throw e#)))))
