@@ -4,10 +4,10 @@
 
 (deftest get-telnet-test
   (testing "get-telnet"
-    (is (= "class org.apache.commons.net.telnet.TelnetClient"
-           (str (type (get-telnet "telehack.com")))))
-    (is (= "class org.apache.commons.net.telnet.TelnetClient"
-           (str (type (get-telnet "telehack.com" 23)))))
+    (is (instance? org.apache.commons.net.telnet.TelnetClient
+           (get-telnet "telehack.com")))
+    (is (instance? org.apache.commons.net.telnet.TelnetClient
+                   (get-telnet "telehack.com" 23)))
     (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4")))
     (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4" 23)))
     (is (thrown? java.net.SocketTimeoutException (get-telnet "1.2.3.4" 23 :connection-time 3000)))))
@@ -60,3 +60,10 @@
     (let [telnet (get-telnet "telehack.com")]
       (is (= nil (kill-telnet telnet)))
       (is (thrown? java.lang.NullPointerException (kill-telnet telnet))))))
+
+(deftest close-test
+  (testing "close-test"
+    (is (.contains (with-open [telnet (get-telnet "telehack.com")]
+                     (read-until telnet "zrun")) "zrun"))
+    (is (.contains (with-open [telnet (get-telnet "telehack.com" 23)]
+                     (read-until telnet "zrun")) "zrun"))))

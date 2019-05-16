@@ -3,18 +3,26 @@
   (:import
     [org.apache.commons.net.telnet TelnetClient]
     [java.io PrintStream PrintWriter]
-    [clojure.lang PersistentVector])
+    [clojure.lang PersistentVector]
+    [java.io Closeable])
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
+
+(defn kill-telnet
+  "disconnects telnet-client"
+  [^TelnetClient telnet-client]
+  (.disconnect telnet-client))
 
 (defn get-telnet
   "returns a telnetclient given server-ip as String and port as int.
   Support options:
   :connet-timeout (default 5000)
-  :default-timeout (default 15000)"
+  :default-timeout (default 15000)
+  Support use in with-open"
   ([^String server-ip ^Integer port & {:keys [connect-timeout default-timeout]
                                        :or {connect-timeout 5000 default-timeout 15000}}]
-   (let [tc (TelnetClient.)]
+   (let [tc (proxy [TelnetClient Closeable] []
+              (close [] (kill-telnet this)))]
      (.setConnectTimeout tc connect-timeout)
      (.setDefaultTimeout tc default-timeout)
      (.connect tc server-ip port)
@@ -22,11 +30,6 @@
      tc))
   ([^String server-ip]
    (get-telnet server-ip 23)))
-
-(defn kill-telnet
-  "disconnects telnet-client"
-  [^TelnetClient telnet-client]
-  (.disconnect telnet-client))
 
 (defn read-until-or
   "reads the input stream of a telnet client until it finds pattern or the timeout
@@ -75,12 +78,3 @@
       (.println s)
       (.flush))))
 
-(defmacro with-telnet
-  "
-  "
-  [bindings & body]
-  `(let ~(subvec bindings 0 2)
-     (try ~@body
-          (catch Exception e#
-            (kill-telnet ~(first bindings))
-            (throw e#)))))
