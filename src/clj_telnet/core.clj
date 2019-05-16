@@ -23,11 +23,12 @@
                                        :or {connect-timeout 5000 default-timeout 15000}}]
    (let [tc (proxy [TelnetClient Closeable] []
               (close [] (kill-telnet this)))]
-     (.setConnectTimeout tc connect-timeout)
-     (.setDefaultTimeout tc default-timeout)
-     (.connect tc server-ip port)
-     (.setKeepAlive tc true)
-     tc))
+     (doto tc
+       (.setReaderThread true)
+       (.setConnectTimeout connect-timeout)
+       (.setDefaultTimeout default-timeout)
+       (.connect server-ip port)
+       (.setKeepAlive true))))
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
