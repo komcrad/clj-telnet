@@ -58,8 +58,10 @@
 
 (defn read-until
   "reads the input stream of a telnet client till it finds pattern"
-  [^TelnetClient telnet ^String pattern]
-  (read-until-or telnet [pattern]))
+  ([^TelnetClient telnet ^String pattern]
+   (read-until-or telnet [pattern]))
+  ([^TelnetClient telnet ^String pattern ^long timeout]
+   (read-until-or telnet [pattern] timeout)))
 
 (defn read-all
   "Attempts to read all the data from the telnet stream.
@@ -78,4 +80,3 @@
     (doto out
       (.println s)
       (.flush))))
-
