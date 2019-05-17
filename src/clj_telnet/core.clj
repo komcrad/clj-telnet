@@ -75,8 +75,11 @@
 
 (defn write
   "writes to the output stream of a telnet client"
-  [^TelnetClient telnet ^String s]
-  (let [out (PrintStream. (.getOutputStream telnet))]
-    (doto out
-      (.println s)
-      (.flush))))
+  ([^TelnetClient telnet ^String s cr]
+   (let [out (PrintStream. (.getOutputStream telnet))]
+     (doto out
+       (.print s)
+       (.print (if cr "\n" ""))
+       (.flush))))
+  ([^TelnetClient telnet ^String s]
+   (write telnet s true)))
