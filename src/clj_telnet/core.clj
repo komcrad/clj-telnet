@@ -2,9 +2,8 @@
   (:gen-class)
   (:import
     [org.apache.commons.net.telnet TelnetClient]
-    [java.io PrintStream PrintWriter]
-    [clojure.lang PersistentVector]
-    [java.io Closeable])
+    [java.io PrintStream PrintWriter Closeable]
+    [clojure.lang PersistentVector])
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
@@ -18,7 +17,7 @@
   Support options:
   :connet-timeout (default 5000)
   :default-timeout (default 15000)
-  Support use in with-open"
+  Add method close so that the object can be used with with-open."
   ([^String server-ip ^Integer port & {:keys [connect-timeout default-timeout]
                                        :or {connect-timeout 5000 default-timeout 15000}}]
    (let [tc (proxy [TelnetClient Closeable] []
