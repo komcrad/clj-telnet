@@ -82,3 +82,13 @@
        (.flush))))
   ([^TelnetClient telnet ^String s]
    (write telnet s true)))
+
+(defmacro with-telnet
+  "
+  "
+  [bindings & body]
+  `(let ~(subvec bindings 0 2)
+     (try ~@body
+          (catch Exception e#
+            (kill-telnet ~(first bindings))
+            (throw e#)))))
