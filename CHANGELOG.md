@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.5.0 2019-06-06]
+- Adds support of the `with-open` function for the telnet object
+
 ## [0.4.0 2019-05-14]
 - Adds ability for read-until-or to accept reg-ex
 
