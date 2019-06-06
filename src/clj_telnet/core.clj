@@ -2,31 +2,34 @@
   (:gen-class)
   (:import
     [org.apache.commons.net.telnet TelnetClient]
-    [java.io PrintStream PrintWriter]
+    [java.io PrintStream PrintWriter Closeable]
     [clojure.lang PersistentVector])
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
-
-(defn get-telnet
-  "returns a telnetclient given server-ip as String and port as int.
-  Support options:
-  :connet-timeout (default 5000)
-  :default-timeout (default 15000)"
-  ([^String server-ip ^Integer port & {:keys [connect-timeout default-timeout]
-                                       :or {connect-timeout 5000 default-timeout 15000}}]
-   (let [tc (TelnetClient.)]
-     (.setConnectTimeout tc connect-timeout)
-     (.setDefaultTimeout tc default-timeout)
-     (.connect tc server-ip port)
-     (.setKeepAlive tc true)
-     tc))
-  ([^String server-ip]
-   (get-telnet server-ip 23)))
 
 (defn kill-telnet
   "disconnects telnet-client"
   [^TelnetClient telnet-client]
   (.disconnect telnet-client))
+
+(defn get-telnet
+  "returns a telnetclient given server-ip as String and port as int.
+  Support options:
+  :connet-timeout (default 5000)
+  :default-timeout (default 15000)
+  Add method close so that the object can be used with with-open."
+  ([^String server-ip ^Integer port & {:keys [connect-timeout default-timeout]
+                                       :or {connect-timeout 5000 default-timeout 15000}}]
+   (let [tc (proxy [TelnetClient Closeable] []
+              (close [] (kill-telnet this)))]
+     (doto tc
+       (.setReaderThread true)
+       (.setConnectTimeout connect-timeout)
+       (.setDefaultTimeout default-timeout)
+       (.connect server-ip port)
+       (.setKeepAlive true))))
+  ([^String server-ip]
+   (get-telnet server-ip 23)))
 
 (defn read-until-or
   "reads the input stream of a telnet client until it finds pattern or the timeout
@@ -54,8 +57,10 @@
 
 (defn read-until
   "reads the input stream of a telnet client till it finds pattern"
-  [^TelnetClient telnet ^String pattern]
-  (read-until-or telnet [pattern]))
+  ([^TelnetClient telnet ^String pattern]
+   (read-until-or telnet [pattern]))
+  ([^TelnetClient telnet ^String pattern ^long timeout]
+   (read-until-or telnet [pattern] timeout)))
 
 (defn read-all
   "Attempts to read all the data from the telnet stream.
@@ -69,15 +74,21 @@
 
 (defn write
   "writes to the output stream of a telnet client"
-  [^TelnetClient telnet ^String s]
-  (let [out (PrintStream. (.getOutputStream telnet))]
-    (doto out
-      (.println s)
-      (.flush))))
+  ([^TelnetClient telnet ^String s cr]
+   (let [out (PrintStream. (.getOutputStream telnet))]
+     (doto out
+       (.print s)
+       (.print (if cr "\n" ""))
+       (.flush))))
+  ([^TelnetClient telnet ^String s]
+   (write telnet s true)))
 
-(defn with-telnet
-  [telnet f]
-  (try (f telnet)
-       (catch Exception e
-         (kill-telnet telnet)
-         (throw e))))
+(defmacro with-telnet
+  "
+  "
+  [bindings & body]
+  `(let ~(subvec bindings 0 2)
+     (try ~@body
+          (catch Exception e#
+            (kill-telnet ~(first bindings))
+            (throw e#)))))
