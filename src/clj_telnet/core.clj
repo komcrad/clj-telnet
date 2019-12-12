@@ -31,6 +31,18 @@
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
+(defn- read-a-char
+  [in]
+  (let [c (.read in)]
+    (print (char c))
+    c))
+
+(defn- write-data
+  [out data]
+  (print data)
+  (.print out data)
+  (.flush out))
+
 (defn read-until-or
   "reads the input stream of a telnet client until it finds pattern or the timeout
   (milliseconds) is reached returns read data as a string.
@@ -41,7 +53,7 @@
      (loop [result ""]
        (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
          (if (< 0 (.available in))
-           (let [s (char (.read in))
+           (let [s (char (read-a-char in))
                  buf (str result s)]
              (if (some #(condp instance? %1
                           java.lang.String (cs/ends-with? buf %1)
@@ -70,16 +82,14 @@
     (wait-for 10 1000 (fn [] (> (.available in) 0)))
     (loop [result ""]
       (if (or (> (.available in) 0) (wait-for 10 1000 (fn [] (> (.available in) 0))))
-        (recur (str result (char (.read in)))) result))))
+        (recur (str result (char (read-a-char in)))) result))))
 
 (defn write
   "writes to the output stream of a telnet client"
   ([^TelnetClient telnet ^String s cr]
-   (let [out (PrintStream. (.getOutputStream telnet))]
-     (doto out
-       (.print s)
-       (.print (if cr "\n" ""))
-       (.flush))))
+   (let [out (PrintStream. (.getOutputStream telnet))
+         data (str s (if cr "\n" ""))]
+     (write-data out data)))
   ([^TelnetClient telnet ^String s]
    (write telnet s true)))
 
