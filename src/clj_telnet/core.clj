@@ -31,15 +31,21 @@
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
+(defn ^:dynamic print-c-debug [c]
+  (print (char c)))
+
+(defn ^:dynamic print-data-debug [data]
+  (print data))
+
 (defn- read-a-char
   [in]
   (let [c (.read in)]
-    (print (char c))
+    (print-c-debug c)
     c))
 
 (defn- write-data
   [out data]
-  (print data)
+  (print-data-debug data)
   (.print out data)
   (.flush out))
 
