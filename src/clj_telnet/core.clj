@@ -27,15 +27,15 @@
        (.setConnectTimeout connect-timeout)
        (.setDefaultTimeout default-timeout)
        (.connect server-ip port)
-       (.setKeepAlive true))))
+       #_(.setKeepAlive true))))
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
 (defn ^:dynamic print-c-debug [c]
-  (print (char c)))
+  #_(print (char c)))
 
 (defn ^:dynamic print-data-debug [data]
-  (print data))
+  #_(print data))
 
 (defn- read-a-char
   [in]
