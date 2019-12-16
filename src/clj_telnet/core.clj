@@ -3,7 +3,8 @@
   (:import
     [org.apache.commons.net.telnet TelnetClient]
     [java.io PrintStream PrintWriter Closeable]
-    [clojure.lang PersistentVector])
+    [clojure.lang PersistentVector]
+    (java.net SocketTimeoutException))
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
@@ -27,7 +28,7 @@
        (.setConnectTimeout connect-timeout)
        (.setDefaultTimeout default-timeout)
        (.connect server-ip port)
-       #_(.setKeepAlive true))))
+       (.setKeepAlive true))))
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
@@ -39,9 +40,11 @@
 
 (defn- read-a-char
   [in]
-  (let [c (.read in)]
-    (print-c-debug c)
-    c))
+  (try
+    (let [c (.read in)]
+      (print-c-debug c)
+      c)
+    (catch SocketTimeoutException ste (println "Read error") nil)))
 
 (defn- write-data
   [out data]
