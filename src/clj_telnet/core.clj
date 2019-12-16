@@ -8,6 +8,8 @@
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
+(def ^:dynamic *debug*)
+
 (defn kill-telnet
   "disconnects telnet-client"
   [^TelnetClient telnet-client]
@@ -32,11 +34,11 @@
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
-(defn ^:dynamic print-c-debug [c]
-  #_(print (char c)))
+(defn  print-c-debug [c]
+  (when *debug* (print (char c))))
 
-(defn ^:dynamic print-data-debug [data]
-  #_(print data))
+(defn print-data-debug [data]
+  (when *debug* (print data)))
 
 (defn- read-a-char
   [in]
