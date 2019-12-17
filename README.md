@@ -35,3 +35,7 @@ Read everything from the buffer (don't use in production)
 Close the telnet connection
 
 `(kill-telnet telnet)`
+
+Print input and output data
+
+`(binding [*debug* true] (read-until telnet some-string))`
