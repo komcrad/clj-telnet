@@ -8,7 +8,7 @@
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
-(def ^:dynamic *debug*)
+(def ^:dynamic *debug* false)
 
 (defn kill-telnet
   "disconnects telnet-client"
