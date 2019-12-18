@@ -36,6 +36,6 @@ Close the telnet connection
 
 `(kill-telnet telnet)`
 
-Print input and output data
+Use read-in-char and write-out-data hooks
 
-`(binding [*debug* true] (read-until telnet some-string))`
+`(binding [read-in-char prn write-out-data prn] (read-until telnet some-string))`

@@ -8,13 +8,13 @@
   (:require [clj-telnet.wait :refer [wait-for]]
             [clojure.string :as cs]))
 
-(def ^:dynamic *debug* false)
-
 (defn kill-telnet
   "disconnects telnet-client"
   [^TelnetClient telnet-client]
   (.disconnect telnet-client))
 
+;; TODO: Should set an input data buffer, or an SocketTimeoutException exception will be raised
+;; when some data not read.
 (defn get-telnet
   "returns a telnetclient given server-ip as String and port as int.
   Support options:
@@ -34,23 +34,27 @@
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
-(defn  print-c-debug [c]
-  (when *debug* (print (char c))))
+(defn ^:dynamic read-in-char
+  "read-in-char will be called when read a char, so can be binded to a function that can do something such as logging."
+  [c])
 
-(defn print-data-debug [data]
-  (when *debug* (print data)))
+(defn ^:dynamic write-out-data
+  "write-out-data will be called when write some data, so can be binded to a function that can do something such as logging."
+  [data])
 
-(defn- read-a-char
-  [in]
+(defn ^:dynamic read-err
+  "read-err will be called when some SocketTimeoutException exception occours."
+  [e] (throw e))
+(defn- read-a-char  [in]
   (try
     (let [c (.read in)]
-      (print-c-debug c)
+      (read-in-char c)
       c)
-    (catch SocketTimeoutException ste (println "Read error") nil)))
+    (catch SocketTimeoutException ste (read-err ste))))
 
 (defn- write-data
   [out data]
-  (print-data-debug data)
+  (write-out-data data)
   (.print out data)
   (.flush out))
 
@@ -64,7 +68,8 @@
      (loop [result ""]
        (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
          (if (< 0 (.available in))
-           (let [s (char (read-a-char in))
+           (let [c (read-a-char in)
+                 s (if c (char c))
                  buf (str result s)]
              (if (some #(condp instance? %1
                           java.lang.String (cs/ends-with? buf %1)
