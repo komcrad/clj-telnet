@@ -35,3 +35,7 @@ Read everything from the buffer (don't use in production)
 Close the telnet connection
 
 `(kill-telnet telnet)`
+
+Use read-in-char and write-out-data hooks
+
+`(binding [read-in-char prn write-out-data prn] (read-until telnet some-string))`
