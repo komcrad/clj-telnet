@@ -34,27 +34,28 @@
   ([^String server-ip]
    (get-telnet server-ip 23)))
 
-(defn ^:dynamic read-in-char
+(defn ^:dynamic *read-in-char*
   "read-in-char will be called when read a char, so can be binded to a function that can do something such as logging."
   [c])
 
-(defn ^:dynamic write-out-data
+(defn ^:dynamic *write-out-data*
   "write-out-data will be called when write some data, so can be binded to a function that can do something such as logging."
   [data])
 
-(defn ^:dynamic read-err
+(defn ^:dynamic *read-err*
   "read-err will be called when some SocketTimeoutException exception occours."
   [e] (throw e))
+
 (defn- read-a-char  [in]
   (try
     (let [c (.read in)]
-      (read-in-char c)
+      (*read-in-char* c)
       c)
-    (catch SocketTimeoutException ste (read-err ste))))
+    (catch Throwable t (*read-err* t))))
 
 (defn- write-data
   [out data]
-  (write-out-data data)
+  (*write-out-data* data)
   (.print out data)
   (.flush out))
 
@@ -109,9 +110,9 @@
   ([^TelnetClient telnet ^String s]
    (write telnet s true)))
 
+; TODO this needs to have bindings like let
 (defmacro with-telnet
-  "
-  "
+  ""
   [bindings & body]
   `(let ~(subvec bindings 0 2)
      (try ~@body
