@@ -38,4 +38,14 @@ Close the telnet connection
 
 Use read-in-char and write-out-data hooks
 
-`(binding [read-in-char prn write-out-data prn] (read-until telnet some-string))`
+```
+(binding [*read-in-char* prn *write-out-data* prn]
+  (read-until telnet some-string))
+```
+
+Control what happens on read exception.
+Eg. Swallow exception
+```
+(binding [*read-err* (constantly nil)]
+  (read-a-char telnet))
+```
