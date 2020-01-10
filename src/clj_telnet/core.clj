@@ -2,7 +2,7 @@
   (:gen-class)
   (:import
     [org.apache.commons.net.telnet TelnetClient]
-    [java.io PrintStream PrintWriter Closeable]
+    [java.io PrintStream PrintWriter Closeable InputStreamReader]
     [clojure.lang PersistentVector]
     (java.net SocketTimeoutException))
   (:require [clj-telnet.wait :refer [wait-for]]
@@ -46,6 +46,10 @@
   "read-err will be called when some SocketTimeoutException exception occours."
   [e] (throw e))
 
+(def ^:dynamic *charset*
+  "Charset for read-until, read-until-or, read-all, write"
+  "UTF-8")
+
 (defn- read-a-char  [in]
   (try
     (let [c (.read in)]
@@ -64,11 +68,13 @@
   (milliseconds) is reached returns read data as a string.
   patterns is a vector of Strings of Regexs."
   ([^TelnetClient telnet ^PersistentVector patterns ^long timeout]
-   (let [in (.getInputStream telnet)
+   (let [in (-> telnet
+                .getInputStream
+                (InputStreamReader. *charset*))
          start-time (System/currentTimeMillis)]
      (loop [result ""]
        (if (or (= 0 timeout) (< (- (System/currentTimeMillis) start-time) timeout))
-         (if (< 0 (.available in))
+         (if (.ready in)
            (let [c (read-a-char in)
                  s (if c (char c))
                  buf (str result s)]
@@ -95,16 +101,18 @@
   "Attempts to read all the data from the telnet stream.
   Should probably only be used in repl"
   [^TelnetClient telnet]
-  (let [in (.getInputStream telnet)]
-    (wait-for 10 1000 (fn [] (> (.available in) 0)))
+  (let [in (-> telnet
+               .getInputStream
+               (InputStreamReader. *charset*))]
+    (wait-for 10 1000 (fn [] (.ready in)))
     (loop [result ""]
-      (if (or (> (.available in) 0) (wait-for 10 1000 (fn [] (> (.available in) 0))))
+      (if (or (.ready in) (wait-for 10 1000 (fn [] (.ready in))))
         (recur (str result (char (read-a-char in)))) result))))
 
 (defn write
   "writes to the output stream of a telnet client"
   ([^TelnetClient telnet ^String s cr]
-   (let [out (PrintStream. (.getOutputStream telnet))
+   (let [out (PrintStream. (.getOutputStream telnet) true *charset*)
          data (str s (if cr "\n" ""))]
      (write-data out data)))
   ([^TelnetClient telnet ^String s]
