@@ -49,3 +49,10 @@ Eg. Swallow exception
 (binding [*read-err* (constantly nil)]
   (read-a-char telnet))
 ```
+
+Change charset (default: `UTF-8`)
+
+```
+(binding [*charset* "UTF-16"]
+  (read-all telnet))
+```
